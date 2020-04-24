@@ -17,3 +17,13 @@ An introductory R course designed for actuaries.
 * Ability to add code snippets and interactive visualizations.
 
 ## WEEK 4: BUILDING A DASHBOARD WITH SHINY
+* Add interactivity to plots created in week 2.
+* Publish dashboard along with document created in week 3.
+* Can potentially make it all available to management via a url - they don't even need to know how to spell R.
+
+Each week builds on the previous week.  Your homework from week 1 will be used for our visualizations in week 2, etc. I will include the following each week:
+* HTML summary of the week's lecture (created in RMarkdown).
+* Video recording that walks you through the HTML file and demonstrates all the steps in R.
+* R script which is the result of following along with the coding during that week's lecture.
+* Any necessary data.
+* Sample solution from the  previous week's homework.
