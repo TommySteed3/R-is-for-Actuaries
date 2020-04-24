@@ -1,4 +1,4 @@
-# R-is-for-Actuaries
+# R is for Actuaries
 An introductory R course designed for actuaries.
 
 ## Week 1: DATA MANIPULATION WITH DPLYR
