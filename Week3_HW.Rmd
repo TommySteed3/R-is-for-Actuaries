@@ -1,0 +1,293 @@
+---
+title: "Mortality Analysis by Selected Factors"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r global_options, include=FALSE}
+
+knitr::opts_chunk$set(fig.width=20, fig.height=20,echo=FALSE, warning=FALSE, message=FALSE)
+
+```
+
+
+```{r}
+
+library(data.table)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(gridExtra)
+
+
+# SEVERAL LESSONS (THINK - PROJECTS) USING SAME DATASET - DON'T WANT A BUNCH OF COPIES - NEXT LEVEL (OF MANY)
+
+data.mortality <- fread('../Data/mortality.csv')
+
+###############################  FACE BAND #################################################
+
+data.mortality.faceband <- data.mortality %>%
+  group_by(face.band) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(Deaths,face.band,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,
+         atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) %>%
+  as.data.frame(data.mortality.faceband) %>%
+  mutate(face.band = fct_relevel(face.band, 
+                                 '1-9999','10000-24999','25000-49999','50000-99999','100000-249999',
+                                 '250000-499999','500000-999999','1000000-2499999','2500000-4999999',
+                                 '5000000-9999999'))
+
+
+Mortality.By.FaceBand <- ggplot(data.mortality.faceband,aes(x = face.band, y = atoe15VBTc, group = 1, label = round(atoe15VBTc,2))) + 
+  geom_line() + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label()
+
+Deaths.By.FaceBand <- ggplot(data.mortality.faceband,aes(x = face.band, y = Deaths, group = 1, label = Deaths)) + 
+  geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label() + geom_line(y = 3007)
+
+###############################  VALUTAION YEAR #################################################
+
+
+data.mortality.valyear <- data.mortality %>%
+  group_by(Val.Year) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(Val.Year,Deaths,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,
+         atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) %>%
+  as.data.frame(data.mortality.faceband)
+
+data.mortality.valyear$Val.Year <- as.factor(data.mortality.valyear$Val.Year)
+
+Mortality.Val.Year <- ggplot(data.mortality.valyear,aes(x = Val.Year, y = atoe15VBTc, group = 1, label = round(atoe15VBTc,2))) + 
+  geom_line() + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label()
+
+Deaths.Val.Year <- ggplot(data.mortality.valyear,aes(x = Val.Year, y = Deaths, group = 1, label = Deaths)) + 
+  geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label() + geom_line(y = 3007)
+
+
+#################################################################################################
+###############################  GENDER  ########################################################
+
+data.Gender <- data.mortality %>%
+  group_by(Gender) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(Gender,Deaths,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,
+         atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) 
+
+Mortality.Gender <- ggplot(data.Gender,aes(x = Gender, y = atoe15VBTc, group = 1, label = round(atoe15VBTc,2))) + 
+  geom_line() + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label()
+
+Deaths.Gender <- ggplot(data.Gender,aes(x = Gender, y = Deaths, group = 1, label = Deaths)) + 
+  geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text() + geom_label() + geom_line(y = 3007)
+
+
+
+
+#################################################################################################
+#####################################  AGE BASIS  ###############################################
+
+
+data.mortality.age.basis <- data.mortality %>%
+  group_by(age.basis) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(age.basis,Deaths,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,
+         atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) %>%
+  as.data.frame(data.mortality.faceband)
+
+data.mortality.age.basis$age.basis <- as.factor(data.mortality.age.basis$age.basis)
+
+Mortality.Age.Basis <- ggplot(data.mortality.age.basis,aes(group = 1, x = age.basis, y = atoe15VBTc, label = round(atoe15VBTc,2))) + 
+  geom_point() + geom_line() + geom_label()
+
+Deaths.Age.Basis <- ggplot(data.mortality.age.basis,aes(x = age.basis, y = Deaths, label = Deaths)) + 
+  geom_bar(stat = "identity") + geom_label() + geom_line(y = 3007)
+
+################################################################################################
+################################################################################################
+##########################      INTERACTION      ###############################################
+
+data.everything <- data.mortality %>%
+  group_by(face.band,Val.Year,age.basis,Gender) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(age.basis,Gender,Val.Year,Deaths,face.band,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) %>%
+  as.data.frame(data.mortality.faceband) %>%
+  mutate(face.band = fct_relevel(face.band, 
+                                 '1-9999','10000-24999','25000-49999','50000-99999','100000-249999',
+                                 '250000-499999','500000-999999','1000000-2499999','2500000-4999999',
+                                 '5000000-9999999'))
+
+data.everything <- data.everything %>%
+  mutate(atoe15VBTc2 = ifelse(atoe15VBTc > 2,2,atoe15VBTc)) %>%
+  mutate(atoe15VBTc2 = ifelse(atoe15VBTc2 < 0.5,0.5,atoe15VBTc2))
+
+all.ratio <- ggplot(data.everything,aes(x = face.band,y = Val.Year)) + 
+  geom_tile(aes(fill = atoe15VBTc2,colour = "white")) + scale_fill_gradient(low = "white",high = "red") + 
+  facet_grid(Gender ~ age.basis)+ geom_text(aes(label = round(atoe15VBTc,2))) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+all.deaths <- ggplot(data.everything,aes(x = face.band,y = Val.Year)) + 
+  geom_tile(aes(fill = Deaths,colour = "white")) + scale_fill_gradient(low = "white",high = "red") + 
+  facet_grid(Gender ~ age.basis)+ geom_text(aes(label = Deaths)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+#################################################################################################
+#######################   TABLE SELECTION - GATHER FUNCTION  ##################################
+
+data.gather <- data.mortality %>%
+  group_by(Val.Year) %>%
+  summarise_at(vars(Deaths,Death.Dollar,qx7580E.amount,qx7580E.policy,qx2001VBT.amount,
+                    qx2001VBT.policy,qx2008VBT.amount,qx2008VBT.policy,qx2008VBTLU.amount,
+                    qx2008VBTLU.policy,qx2015VBT.amount,qx2015VBT.policy),list(sum)) %>%
+  mutate(atoe7580d = Death.Dollar/qx7580E.amount,
+         atoe01VBTd = Death.Dollar/qx2001VBT.amount,
+         atoe08VBTd = Death.Dollar/qx2008VBT.amount,
+         atoe08VBTLUd = Death.Dollar/qx2008VBTLU.amount,
+         atoe15VBTd = Death.Dollar/qx2015VBT.amount,
+         atoe7580c = Deaths/qx7580E.policy,
+         atoe01VBTc = Deaths/qx2001VBT.policy,
+         atoe08VBTc = Deaths/qx2008VBT.policy,
+         atoe08VBTLUc = Deaths/qx2008VBTLU.policy,
+         atoe15VBTc = Deaths/qx2015VBT.policy) %>%
+  select(Val.Year,Deaths,atoe7580d,atoe01VBTd,atoe08VBTd,atoe08VBTLUd,atoe15VBTd,atoe7580c,atoe01VBTc,atoe08VBTc,atoe08VBTLUc,atoe15VBTc) %>%
+  gather(table,a.to.e,atoe7580d:atoe15VBTc)
+
+data.gather$a.to.e2 <- ifelse(data.gather$a.to.e > 2, 2, data.gather$a.to.e)
+
+a.to.e_by.table <- ggplot(data.gather,aes(x = table,y = Val.Year)) + 
+  geom_tile(aes(fill = a.to.e2,colour = "white")) + scale_fill_gradient(low = "white",high = "red")  + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_text(aes(label = round(a.to.e,2)))
+
+
+
+```
+
+
+Management recently requested a review of our mortality experience by the following factors:
+
+* Age Basis
+* Valuation Year
+* Gender
+* Face Band
+
+## SUMMARY OF OVERALL FINDINGS
+
+**Face Amount**
+
+Actual to Expected decreases with face amount as expected.  Rates begin to increase around face amounts of $1M, but this is where experience becomes very sparse.
+
+**Valuation Year**
+
+Experience covers the years 2009-2015.  Actual to Expected rates are lowest in the first and last years, highest in 2012.  I would recommend investigating censoring/truncation methods to gain more comfort with the endpoints.
+
+**Gender**
+
+Male actual to expected is higher than female.  
+
+**Age Basis**
+
+More pronounced than the gender difference.  Age Basis = 1 A/E ratio is greater than Age Basis = 0.
+
+## SINGLE VARIABLE ANALYSIS
+
+The tables below summarize count-weighted actual to expected values using the 2015 VBT table.
+
+```{r}
+
+grid.arrange(Mortality.By.FaceBand,Deaths.By.FaceBand,Mortality.Val.Year,Deaths.Val.Year,Mortality.Gender, Deaths.Gender, Mortality.Age.Basis, Deaths.Age.Basis,ncol = 2)
+
+
+```
+
+## MULTIVARIATE ANALYSIS
+
+The table below summarizes the number of deaths in each cohort.  As you start looking at interactions, you begin getting fewer deaths (therefore less credibility) in each cohort.  Many of the cohorts even have 0 deaths.  Generally speaking, most of the deaths are in the top left corner of the Age Basis = 1 graphs.  Top left indicates later valuation years and lower face amounts.
+
+```{r, echo = FALSE, warning=FALSE, fig.width=20,fig.height=20}
+
+all.deaths
+
+```
+
+The tables below summarize actual to expected mortality rates by cohort.  There does appear to be a pattern of decreasing mortality by increasing face amount.  This can be observed moving left to right - giving more credibility to the regions with higer relative death count.  Used capped values for heatmapping, but uncapped for labeling.
+
+```{r, echo = FALSE, warning=FALSE, fig.width=20,fig.height=20}
+
+all.ratio
+
+```
+
+
+## TABLE COMPARISON
+
+The table below summarizes actual to expected values by each of our 5 tables.  Moving left to right, count-weighted results are shown first (suffix = "c"), then dollar-weighted (suffix = "d"). The 2015 table appears to be the best fit (A to E is closest to 1).  This is the table that our initial findings are based on.
+
+There is a wide range of results based on the selected table.  As expected, dollar weighted values are lower than count weighted - indicating a socio-economic impact.
+
+
+```{r,echo = FALSE, fig.height=20,fig.width=20}
+
+a.to.e_by.table
+
+```
+
